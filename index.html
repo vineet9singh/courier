@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Track Courier</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.1.1/css/bootstrap.min.css">
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>-->
+    <style>
+    /*.add-courier-table th, .add-courier-table td {
+        border-top: none;
+    }*/
+    /*.add-courier-table th {
+        margin-right: 0;
+    }*/
+    </style>
+</head>
+<body>
+    <!-- Container where the different pages will be loaded -->
+    <div class="container">
+        <div class="home-page"></div>
+        <div class="courier-details"></div>
+        <div class="dashboard"></div>
+    </div>
+
+    <script>
+        var searchBox;
+        var courierLattitude;
+        var courierLongitude;
+        function initSearch() {
+            var input = document.getElementById('find-places');
+            searchBox = new google.maps.places.SearchBox(input);
+
+            searchBox.addListener('places_changed', function() {
+                var places = searchBox.getPlaces();
+                courierLattitude = places[0].geometry.location.lat();
+                courierLongitude = places[0].geometry.location.lng();
+            });
+        }
+
+        function generateCourierId(length) {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            for(var i = 0; i < length; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            }
+            return text;
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.2/jquery.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.2/underscore-min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.2/backbone-min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBahcCcZwj05QXi1AGOO1FlxRnfD05kaKU&libraries=places"></script>
+    <!-- Home Page -->
+    <script type="text/template" id="home-page">
+        <h1>Track Courier</h1>
+        <hr/>
+        <% if (window.localStorage.getItem('userDetails') == null) { %>
+            <a href="#login" class="btn btn-primary">Login</a>
+            <a href="#signup" class="btn btn-primary">Signup</a>
+        <% } else { %>
+            <a href="#dashboard" class="btn btn-primary">Manage Couriers</a>
+            <button class="btn btn-primary logout">Logout</button>
+        <% } %>
+        <br/><br/>
+
+        <h4>Track Your Courier</h4>
+        <form class="track-courier-form">
+            <label>Courier ID</label><br/>
+            <input type="text" name="courier" class='courier-id'/> <span class="parcel_not_exits" style="color:red" />
+            <br/><br/>
+            <button type="submit" class="btn btn-primary">Track</button>
+        </form>
+    </script>
+
+    <script type="text/template" id="add-courier">
+        <h1>Add Courier</h1>
+        <hr/>
+        <form class="add-courier-form">
+            <table class="table table-bordered">
+              <tbody>
+                  <tr>
+                      <th>From Person</th>
+                      <td><input type="text" name="from_person_name"/></td>
+                  </tr>
+                  <tr>
+                      <th>To Person</th>
+                      <td><input type="text" name="to_person_name"/></td>
+                  </tr>
+                  <tr>
+                      <th>Color</th>
+                      <td><input type="text" name="color"/></td>
+                  </tr>
+                  <tr>
+                      <th>Weight</th>
+                      <td><input type="text" name="weight" placeholder="In Kgs"/></td>
+                  </tr>
+                  <tr>
+                      <th>Price</th>
+                      <td><input type="text" name="service_price" placeholder="in INR"/></td>
+                  </tr>
+                  <tr>
+                      <th>Dispatched On</th>
+                      <td><input type="date" name="dispatched_on"/></td>
+                  </tr>
+                  <tr>
+                      <th>Expected Delivery</th>
+                      <td><input type="date" name="expected_delivery"/></td>
+                  </tr>
+                  <tr>
+                      <th>Sender Address</th>
+                      <td><textarea name="sender_address"/></td>
+                  </tr>
+                  <tr>
+                      <th>Receiver Address</th>
+                      <td><textarea name="receiver_address"/></td>
+                  </tr>
+                  <tr>
+                      <th>Sender Phone No</th>
+                      <td><input type="text" name="sender_phone_no"/></td>
+                  </tr>
+                  <tr>
+                      <th>Receiver Phone No</th>
+                      <td><input type="text" name="receiver_phone_no"/></td>
+                  </tr>
+                  <tr>
+                      <th>Current Location</th>
+                      <td><input type="text" name="current_location" id="find-places" placeholder="Search Location"/></td>
+                  </tr>
+              </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">Add Courier</button>
+            <a class="btn btn-primary back">Back</a>
+        </form>
+    </script>
+
+    <script type="text/template" id="update-courier">
+        <h1>Update Courier</h1>
+        <hr/>
+        <form class="update-courier-form">
+            <label>Courier</label>
+            <select name="parcel_id" id="parcel_id_selected">
+                <% _.each(courierIds, function(courier) { %>
+                    <option value="<%= courier.parcel_id%>"><%= courier.parcel_id%></option>
+                <% }); %>
+            </select>
+            <label>Expected Delivery</label>
+            <input type="date" name="expected_delivery"/><span class="new-expected-delivery" style="color: red"/>
+            <label>Status</label>
+            <select name="status" id="parcel_status">
+                <option value="Delivered">Delivered</option>
+                <option value="Not Delivered">Not Delivered</option>
+            </select>
+            <label>New Location</label>
+            <input type="text" name="new_location" id="find-places" placeholder="Search Location"/><span class="new-location" style="color: red"/>
+            <br/>
+            <button type="submit" class="btn btn-primary">Update Courier</button>
+            <button class="btn btn-primary delete-courier">Delete Courier</button>
+            <a class="btn btn-primary back">Back</a>
+        </form>
+    </script>
+
+    <script type="text/template" id="dashboard-page">
+        <h2>Welcome to your dashboard </h2>
+        <hr/>
+        <button class="btn btn-primary add-courier">Add Courier</button>
+        <button class="btn btn-primary update-courier">Update/Delete Courier</button>
+        <button class="btn btn-primary logout">Logout</button>
+        <br/><br>
+
+        <h3>Couriers</h3>
+        <!--<table class="table">-->
+        <table class="table table-bordered">
+            <thead class="thead-inverse">
+                <tr>
+                    <th>Parcel ID</th>
+                    <th>Dispatched On</th>
+                    <th>Expected Delivery</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% _.each(couriers, function(courier) { %>
+                    <tr onclick="document.location = '#/courier-details/' + '<%= courier.parcel_id %>'" style="cursor: pointer">
+                        <td><%= courier.parcel_id%></td>
+                        <td><%= courier.dispatched_on%></td>
+                        <td><%= courier.expected_delivery%></td>
+                        <td><%= courier.status%></td>
+                    </tr>
+                <% }); %>
+            </thbody>
+
+        </table>
+        <a href="/" class="btn btn-primary back">Back</a>
+    </script>
+
+    <!-- Login Page -->
+    <script type="text/template" id="login-page">
+        <h3>Login Page</h3>
+        <form class="login-form">
+            <label>Username</label>
+            <input type="text" name="username" /><span class="username" style="color: red"/>
+
+            <label>Password</label>
+            <input type="password" name="password" /><span class="password" style="color: red"/>
+            <br/>
+
+            <div class="unauthorized" style="color: red"/>
+            <button type="submit" class="btn btn-primary">Login</button>
+            <a href="" class="btn btn-primary">Back</a>
+        </form>
+    </script>
+
+    <!-- Signup Page -->
+    <script type="text/template" id="signup-page">
+        <h3>Signup Page</h3>
+        <form class="signup-form">
+            <label>Username</label>
+            <input type="text" name="username" /><span class="signup-username" style="color: red"/>
+
+            <label>Name</label>
+            <input type="text" name="name" /><span class="signup-name" style="color: red"/>
+
+            <label>Email ID</label>
+            <input type="text" name="email_id" /><span class="signup-email" style="color: red"/>
+
+            <label>Password</label>
+            <input type="password" name="password" /><span class="signup-password" style="color: red"/>
+
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" /><span class="signup-confirm" style="color: red"/>
+            <br/>
+          <button type="submit" class="btn btn-primary">Sign Up</button>
+          <a class="btn btn-primary back">Back</a>
+          </form>
+    </script>
+
+    <!-- Courier Details -->
+    <script type="text/template" id="courier-details">
+        <h3>Courier Details</h3><hr/>
+        <table class="table table-bordered">
+          <tbody>
+              <tr>
+                  <th>Parcel ID</th>
+                  <td><%= htmlEncode(parcel.get('parcel_id')) %></td>
+              </tr>
+              <tr>
+                  <th>From Person</th>
+                  <td><%= htmlEncode(parcel.get('from_person_name')) %></td>
+              </tr>
+              <tr>
+                  <th>To Person</th>
+                  <td><%= htmlEncode(parcel.get('to_person_name')) %></td>
+              </tr>
+              <tr>
+                  <th>Status</th>
+                  <td><%= htmlEncode(parcel.get('status')) %></td>
+              </tr>
+              <tr>
+                  <th>Color</th>
+                  <td><%= htmlEncode(parcel.get('color')) %></td>
+              </tr>
+              <tr>
+                  <th>Weight</th>
+                  <td><%= htmlEncode(parcel.get('weight')) %></td>
+              </tr>
+              <tr>
+                  <th>Dispatched On</th>
+                  <td><%= htmlEncode(parcel.get('dispatched_on')) %></td>
+              </tr>
+              <tr>
+                  <th>Expected Delivery</th>
+                  <td><%= htmlEncode(parcel.get('expected_delivery')) %></td>
+              </tr>
+              <tr>
+                  <th>Sender Address</th>
+                  <td><%= htmlEncode(parcel.get('sender_address')) %></td>
+              </tr>
+              <tr>
+                  <th>Receiver Address</th>
+                  <td><%= htmlEncode(parcel.get('receiver_address')) %></td>
+              </tr>
+              <tr>
+                  <th>Sender Phone No</th>
+                  <td><%= htmlEncode(parcel.get('sender_phone_no')) %></td>
+              </tr>
+              <tr>
+                  <th>Receiver Phone No</th>
+                  <td><%= htmlEncode(parcel.get('receiver_phone_no')) %></td>
+              </tr>
+          </tbody>
+        </table>
+        <h5>Currency Location</h5>
+        <div class="map" style="width:80%;height:300px"></div><br/>
+        <a onclick="history.go(-1)" class="btn btn-primary">Back</a>
+    </script>   
+
+    <script>
+    function validateUser(user) {
+        var username = user.username.trim();
+        var pass = user.password.trim();
+        $('.username').html("");
+        $('.password').html("");
+
+        if (username === "") {
+            $('.username').html('Username cannot be empty');
+
+            if (pass === "") {
+                $('.password').html('Password cannot be empty');
+            }
+            return false;
+        } else if (pass === "") {
+            $('.password').html('Password cannot be empty');
+            return false;
+        }
+        return true;
+    }
+
+    function validateNewUser(user) {
+        var username = user.username.trim();
+        var pass = user.password.trim();
+        var confirm = user.confirm_password.trim();
+        var name = user.name.trim();
+        var email_id = user.email_id.trim();
+        $('.signup-username').html("");
+        $('.signup-password').html("");
+        $('.signup-name').html("");
+        $('.signup-email').html("");
+        $('.signup-confirm').html("");
+
+        if (username === "") {
+            $('.signup-username').html('Username cannot be empty');
+            return false;
+        } else if (name === "") {
+            $('.signup-name').html('Name cannot be empty');
+            return false;
+        } else if (email_id === "") {
+            $('.signup-email').html('Email cannot be empty');
+            return false;
+        } else if (pass === "") {
+            $('.signup-password').html('Password cannot be empty');
+            return false;
+        } else if (confirm === "") {
+            $('.signup-confirm').html('Password cannot be empty');
+            return false;
+        } else if (pass != confirm) {
+            $('.signup-confirm').html('Passwords not matching');
+            return false;
+        }
+        return true;
+    }
+
+    function validateCourier(courier) {
+        var fromPerson = courier.from_person_name.trim();
+        var toPerson = courier.to_person_name.trim();
+        var receiverAddress = courier.receiver_address.trim();
+        var dispatchedOn = courier.dispatched_on.trim();
+        var expectedDelivery = courier.expected_delivery.trim();
+
+        if (fromPerson == "" || toPerson == "" || receiverAddress == "" || dispatchedOn == "" || expectedDelivery == "" || courierLattitude == 0 || courierLongitude == 0 || parseFloat(courier.weight.trim()) == NaN) {
+            console.log('Fill mandatory fields');
+            return false;
+        }
+        return true;
+    }
+
+    function validateUpdateCourier(courier) {
+        var expectedDelivery = courier.expected_delivery.trim();
+        $('.new-expected-delivery').html('');
+        $('.new-location').html('');
+
+        if (expectedDelivery == "") {
+            $('.new-expected-delivery').html('Expected delivery cannot be empty');
+            return false;
+        }
+
+        if (courierLattitude == 0 && courierLongitude == 0) {
+            $('.new-location').html('Location cannot be empty');
+            return false;
+        }
+        return true;
+    }
+    </script>
+
+    <script>
+        $.ajaxPrefilter( function( options, originalOptions, jqXHR ) {
+            options.url = 'https://track-courier-ldsstfrezq.now.sh' + options.url;
+            // options.url = 'http://localhost:8000' + options.url;
+        });
+        function htmlEncode(value){
+          return $('<div/>').text(value).html();
+        }
+        $.fn.serializeObject = function() {
+          var o = {};
+          var a = this.serializeArray();
+          $.each(a, function() {
+              if (o[this.name] !== undefined) {
+                  if (!o[this.name].push) {
+                      o[this.name] = [o[this.name]];
+                  }
+                  o[this.name].push(this.value || '');
+              } else {
+                  o[this.name] = this.value || '';
+              }
+          });
+          return o;
+        };
+
+        /////////////// Models /////////////////////////
+        var User = Backbone.Model.extend({
+            urlRoot: '/accounts/'
+        });
+
+        var Courier = Backbone.Model.extend({
+            urlRoot: '/parcels/'
+        });
+
+        ////////////// Views ////////////////////////////
+        var LoginView = Backbone.View.extend({
+            el: '.home-page',
+
+            events: {
+                'submit .login-form': 'login'
+            },
+
+            login: function(ev) {
+                ev.preventDefault();
+                var that = this;
+                var userDetails = $(ev.currentTarget).serializeObject();
+                if(validateUser(userDetails)) {
+                    var user = new User();
+                    user.urlRoot += 'login';
+                    user.save(userDetails, {
+                        success: function(userDetails) {
+                            window.localStorage.setItem('userDetails', userDetails);
+                            that.$el.html('');
+                            router.navigate('/#dashboard', true);
+                        },
+
+                        error: function(err) {
+                            $('.unauthorized').html('Invalid Credentials');
+                        }
+                    });
+                }
+            },
+
+            render: function() {
+                $('.dashboard').html('');
+                var template = _.template($('#login-page').html());
+                this.$el.html(template);
+            }
+        });
+        var loginView = new LoginView();
+
+        var SignupView = Backbone.View.extend({
+            el: '.home-page',
+
+            events: {
+                'submit .signup-form': 'signup'
+            },
+
+            signup: function(ev) {
+                ev.preventDefault();
+                var that = this;
+                var userDetails = $(ev.currentTarget).serializeObject();
+                if(validateNewUser(userDetails)) {
+                    var user = new User();
+                    user.urlRoot += 'register';
+                    delete userDetails.confirm_password;
+                    user.save(userDetails, {
+                        success: function(userDetails) {
+                            window.localStorage.setItem('userDetails', userDetails);
+                            that.$el.html('');
+                            router.navigate('/#dashboard', true);
+                        },
+
+                        error: function(err) {
+                            // $('.unauthorized').html('Invalid Credentials');
+                            console.log(err);
+                        }
+                    });
+                }
+            },
+
+            render: function() {
+                var template = _.template($('#signup-page').html());
+                this.$el.html(template);
+            }
+        });
+        var signupView = new SignupView();
+
+        var CourierDetailsView = Backbone.View.extend({
+            el: '.courier-details',
+
+            loadMap: function(lat, long) {
+                var mapCanvas = document.getElementsByClassName('map')[0];
+                var myLatLng = {lat: parseFloat(lat), lng: parseFloat(long)};
+                var mapOptions = {
+                    center: myLatLng,
+                    zoom: 13
+                }
+                var map = new google.maps.Map(mapCanvas, mapOptions);
+
+                var marker = new google.maps.Marker({
+                    position: myLatLng,
+                    map: map,
+                    title: "You're parcel is here!"
+                });
+            },
+
+            render: function(courierId) {
+                var that = this;
+                var courier = new Courier({id: courierId});
+                courier.fetch({
+                    success: function(parcel) {
+                        if (parcel.get('parcel_id') != undefined) {
+                            var template = _.template($('#courier-details').html(), {parcel: parcel});
+                            that.$el.html(template);
+                            that.loadMap(parcel.get('current_location_lat'), parcel.get('current_location_long'));
+                        } else {
+                            router.navigate('/', true);
+                            $('.parcel_not_exits').html('Courier doesn\'t exits');
+                        }
+                    },
+
+                    error: function(err, response) {
+                        console.log(response.status);
+                        if (response.status == 401)
+                            that.$el.html("<h3>Not Logged In. Please Login.</h3><a href=\"/\" class=\"btn btn-primary\">Back</a>")
+                        else
+                            that.$el.html("<h3>Invalid Courier ID</h3><a href=\"\" class=\"btn btn-primary\">Back</a>");
+                    }
+                });
+            }
+        });
+        var courierDetailsView = new CourierDetailsView();
+
+        var DashBoardView = Backbone.View.extend({
+            el: '.dashboard',
+
+            events: {
+                'click .logout': 'logout',
+                'click .add-courier': 'loadAddCourierView',
+                'click .update-courier': 'loadUpdateCourierView',
+                'click .delete-courier': 'deleteCourier',
+                'click .back': 'back',
+                'submit .add-courier-form': 'addCourier',
+                'submit .update-courier-form': 'updateCourier'
+            },
+
+            deleteCourier: function(ev) {
+                ev.preventDefault();
+                var courierId = $('#parcel_id_selected').val();
+                if (courierId != null && courierId != "") {
+                    var courier = new Courier();
+                    courier.id = courierId;
+                    courier.destroy({
+                        success: (response) => {
+                            alert('Deleted successfully!');
+                            router.navigate('/#dashboard', true);
+                        },
+
+                        error: (msg) => {
+                            console.log(msg);
+                        }
+                    });
+                }
+            },
+
+            updateCourier: function(ev) {
+                ev.preventDefault();
+                var courierDetails = $(ev.currentTarget).serializeObject();
+                if (validateUpdateCourier(courierDetails)) {
+                    var courier = new Courier();
+                    // courier.urlRoot += courierDetails.parcel_id;
+                    courierDetails.new_location_lat = courierLattitude;
+                    courierDetails.new_location_long = courierLongitude;
+                    courierDetails.status = $('#parcel_status :selected').text();
+                    delete courierDetails.new_location;
+                    courier.idAttribute = "parcel_id";
+
+                    courier.save(courierDetails, {
+                        dataType: 'text',
+
+                        success: function(courierDetails) {
+                            alert('Updated courier successfully!');
+                            router.navigate('/#dashboard', true);
+                        },
+
+                        error: function(err) {
+                            console.log(err);
+                        }
+                    });
+                }
+            },
+
+            addCourier: function(ev) {
+                ev.preventDefault();
+                var courier = new Courier();
+                var courierDetails = $(ev.currentTarget).serializeObject();
+                if (validateCourier(courierDetails)) {
+                    courierDetails.current_location_lat = courierLattitude;
+                    courierDetails.current_location_long = courierLongitude;
+                    courierDetails.parcel_id = generateCourierId(10);
+                    courierDetails.weight = parseFloat(courierDetails.weight);
+                    delete courierDetails.current_location;
+                    courierDetails.status = "Not Delivered";
+                    courier.save(courierDetails, {
+                        success: function(courierDetails) {
+                            alert('Added courier successfully!');
+                            router.navigate('/#dashboard', true);
+                        },
+
+                        error: function(err) {
+                            console.log(err);
+                        }
+                    });
+                }
+            },
+
+            back: function(ev) {
+                var template = _.template($('#dashboard-page').html());
+                this.render();
+            },
+
+            loadAddCourierView: function(ev) {
+                courierLattitude = 0;
+                courierLongitude = 0;
+                var template = _.template($('#add-courier').html());
+                this.$el.html(template);
+                initSearch();
+            },
+
+            loadUpdateCourierView: function(ev) {
+                courierLattitude = 0;
+                courierLongitude = 0;
+                var that = this;
+                var courier = new Courier();
+                courier.urlRoot += "all/ids";
+                courier.fetch({
+                    success: function(courierIds) {
+                        var template = _.template($('#update-courier').html(), {courierIds:courierIds.attributes});
+                        that.$el.html(template);
+                        initSearch();
+                    },
+
+                    error: function(err, response) {
+                        console.log('Error in retrieving ids');
+                    }
+                });
+            },
+
+            logout: function(ev) {
+                var that = this;
+                var user = new User();
+                user.urlRoot += 'logout';
+                user.fetch({
+                    dataType: 'text',
+                    success: function(respText, response) {
+                        window.localStorage.removeItem('userDetails');
+                        that.$el.html('');
+                        router.navigate('/', true);
+                    },
+
+                    error: function(err, response) {
+                        console.log('Error in logging out');
+                    }
+                });
+            },
+
+            render: function() {
+                if(window.localStorage.getItem('userDetails') == null)
+                    router.navigate('/#login', true);
+                else {
+                    var that = this;
+                    $('.home-page').html('');
+                    var courier = new Courier();
+                    courier.urlRoot += "all/ids";
+                    courier.fetch({
+                        success: function(couriers) {
+                            console.log(couriers.attributes);
+                            var template = _.template($('#dashboard-page').html(), {couriers:couriers.attributes});
+                            that.$el.html(template);
+                        },
+
+                        error: function(err, response) {
+                            console.log('Error in retrieving ids');
+                        }
+                    });
+                }
+            }
+        });
+        var dashboardView = new DashBoardView();
+
+        var HomePageView = Backbone.View.extend({
+            el: '.home-page',
+
+            events: {
+                'submit .track-courier-form': 'track',
+                'click .logout': 'logout'
+            },
+
+            logout: function(ev) {
+                if (window.localStorage.getItem('userDetails') == null)
+                    alert('User is not logged in');
+                else {
+                    var that = this;
+                    var user = new User();
+                    user.urlRoot += 'logout';
+                    user.fetch({
+                        dataType: 'text',
+                        success: function(respText, response) {
+                            window.localStorage.removeItem('userDetails');
+                            that.render();
+                            console.log('Logout Successful');
+                        },
+
+                        error: function(err, response) {
+                            console.log('Error in logging out');
+                        }
+                    });
+                }
+            },
+
+            track: function(ev) {
+                ev.preventDefault();
+                var courierId = $(ev.currentTarget).serializeObject().courier;
+                if (courierId != null && courierId != "") {
+                    this.$el.html('');
+                    router.navigate('/courier-details/' + courierId, true);
+                } else {
+                    $('.parcel_not_exits').html('Courier ID cannot be empty');
+                }
+            },
+
+            render: function() {
+                // Basically maintain some kind of global session object and check if the user is logged in.
+                var template = _.template($('#home-page').html());
+                this.$el.html(template);
+            }
+        });
+        var homePageView = new HomePageView();
+
+        /////////////// Router ///////////////////////////
+        var Router = Backbone.Router.extend({
+            routes: {
+                "": "home",
+                "login": "login",
+                "signup": "signup",
+                "courier-details/:id": "courier-details",
+                "dashboard": "dashboard"
+            }
+        });
+        var router = new Router;
+
+        router.on('route:home', function() {
+            homePageView.render();
+            dashboardView.$el.html('');
+            courierDetailsView.$el.html('');
+        });
+
+        router.on('route:login', function() {
+            loginView.render();
+        });
+
+        router.on('route:signup', function() {
+            signupView.render();
+        });
+
+        router.on('route:courier-details', function(id) {
+            dashboardView.$el.html('');
+            homePageView.$el.html('');
+            courierDetailsView.render(id);
+        });
+
+        router.on('route:dashboard', function() {
+            courierDetailsView.$el.html('');
+            dashboardView.render();
+        });
+
+        Backbone.history.start();
+    </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "name": "track-courier",
+  "version": "1.0.0",
+  "description": "A nodejs application to track couriers.",
+  "main": "server.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sunilkumarc/track-courier.git"
+  },
+  "author": "Sunil Kumar C",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sunilkumarc/track-courier/issues"
+  },
+  "homepage": "https://github.com/sunilkumarc/track-courier#readme",
+  "dependencies": {
+    "bcryptjs": "^2.3.0",
+    "bluebird": "^3.4.6",
+    "body-parser": "^1.15.2",
+    "chai": "^3.5.0",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.1",
+    "express": "*",
+    "express-session": "^1.14.1",
+    "lodash": "^4.16.1",
+    "lowdb": "^0.13.1",
+    "mocha": "^3.0.2",
+    "node-inspector": "^0.12.8",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "pg": "^6.0.3",
+    "pg-hstore": "^2.3.2",
+    "pg-promise": "^5.3.1",
+    "request": "^2.74.0",
+    "sequelize": "^3.30.2",
+    "sinon": "^1.17.5",
+    "sinon-stub-promise": "^3.0.1"
+  }
+}
